@@ -4,12 +4,13 @@
 #include "entity.h"
 #include "Application.h"
 
-void process_entity(attention attention_of_entity, entity *to_make) {
+void process_entity(entity *to_make, Window_t window) {
 	char const *vertex_shader = 
 		"#version 460 core\n"
-		"layout (location = 0) in vec3 position;\n"
+		"layout (location = 0) in vec3 pos1;\n"
+		"uniform vec3 pos2;\n"
 		"void main() {\n"
-		"	gl_Position = vec4(position, 1);\n"
+		"	gl_Position = vec4(pos1 + pos2, 1);\n"
 		"}";
 	char const *fragment_shader = 
 		"#version 460 core\n"
@@ -29,13 +30,13 @@ void process_entity(attention attention_of_entity, entity *to_make) {
 	glGetShaderiv(vertShader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(vertShader, 512, NULL, info);
-		printf("could not compile vert shader");
+		printf("could not compile vert shader\n%s\n", info);
 	}
 	glCompileShader(fragShader);
 	glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
 	if(!success) {
 		glGetShaderInfoLog(fragShader, 512, NULL, info);
-		printf("could not compile frag shader");
+		printf("could not compile frag shader\n%s\n", info);
 	}
 
 	to_make->shaderID = glCreateProgram();
@@ -51,13 +52,11 @@ void process_entity(attention attention_of_entity, entity *to_make) {
 	}
 
 	int render_attention_of_entity = GL_DYNAMIC_DRAW;
-	if(attention_of_entity == rare) {
+	if(to_make->draw_type == rare) {
 		render_attention_of_entity = GL_STREAM_DRAW;
-	} else if(attention_of_entity == non_changing) {
+	} else if(to_make->draw_type == non_changing) {
 		render_attention_of_entity = GL_STATIC_DRAW;
 	}
-
-	
 
 	glDeleteShader(vertShader);
 	glDeleteShader(fragShader);
@@ -72,18 +71,15 @@ void process_entity(attention attention_of_entity, entity *to_make) {
 	
 	for(int i = 0; i < to_make->vertices_size; i += 3) {
 		float tmp[3] = {
-			to_make->vertices[i],
-			to_make->vertices[i+1],
-			to_make->vertices[i+2],
+			to_make->vertices[i], to_make->vertices[1+i], to_make->vertices[2+i]
 		};
-		glm_normalize(tmp);
-		printf("%f, %f, %f\n", tmp[0], tmp[1], tmp[2]);
+		int width;
+		int height;
+		glfwGetWindowSize(, &width, &height);
+
 		to_make->vertices[i] = tmp[0];
-		to_make->vertices[i+1] = tmp[1];
-		to_make->vertices[i+2] = tmp[2];
-	}
-	for(int i = 0; i < to_make->vertices_size; i++) {
-		printf("%f, ", to_make->vertices[i]);
+		to_make->vertices[1+i] = tmp[1];
+		to_make->vertices[2+i] = tmp[2];
 	}
 	glBufferData(GL_ARRAY_BUFFER, to_make->vertices_size * sizeof(float), to_make->vertices, render_attention_of_entity);
 
@@ -97,8 +93,18 @@ void draw_entity(entity *to_draw) {
 	glUseProgram(to_draw->shaderID);
 	glBindVertexArray(to_draw->VAO);
 	glDrawElements(GL_TRIANGLES, to_draw->indices_size, GL_UNSIGNED_INT, 0);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
+
+void move(entity *obj, vec3 direction) {
+	glUseProgram(obj->shaderID);
+	glBindVertexArray(obj->VAO);
+	uint32_t position = glGetUniformLocation(obj->shaderID, "pos2");
+
+	glm_vec3_add(obj->position, direction, obj->position);
+	glm_normalize(obj->position);
+	glUniform3f(position, obj->position[0], obj->position[1], obj->position[2]);
+}
+
 
 void destruct_entity(entity *entity_obj){
 	glDeleteBuffers(1, &entity_obj->EBO);

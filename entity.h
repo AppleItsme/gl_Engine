@@ -14,6 +14,7 @@ enum_t {
 struct_t {
 	attention draw_type;
 	vec3 color;
+	vec3 position;
 
 	uint32_t 
 		shaderID,
@@ -25,6 +26,7 @@ struct_t {
 	uint32_t *indices;
 } entity;
 
-void process_entity(attention attention_of_entity, entity *to_make);
+void process_entity(entity *to_make, Window_t window);
 void draw_entity(entity *to_draw);
 void destruct_entity(entity *entity_obj);
+void move(entity *obj, vec3 direction);

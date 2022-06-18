@@ -41,10 +41,10 @@ void free_Application() {
 void run_Application() {
 	entity rectangle = {
 		.vertices = (float[]) {
-			600/2,  800/2, 0.0f,  // top right
-			600/2, -800/2, 0.0f,  // bottom right
-			-600/2, -800/2, 0.0f,  // bottom left
-			-600/2,  800/2, 0.0f   // top left 
+			600,  60/2, 1.0f,  // top right
+			60/2, -60/2, 1.0f,  // bottom right
+			-60/2, -60/2, 1.0f,  // bottom left
+			-60/2,  60/2, 1.0f   // top left 
 		},
 		.vertices_size = 12,
 		.indices = (uint32_t[]) {
@@ -52,13 +52,19 @@ void run_Application() {
 			0, 2, 3
 		},
 		.indices_size = 6,
+		.draw_type = dynamic
 	};
-	process_entity(non_changing, &rectangle);
+	process_entity(&rectangle);
+	uint32_t time = glfwGetTime();
+
+
 	while(!glfwWindowShouldClose(window)) {
 		glClearColor(0.2, 0.2, 0.2, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 		draw_entity(&rectangle);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+		time = glfwGetTime();
 	}
+	destruct_entity(&rectangle);
 }
