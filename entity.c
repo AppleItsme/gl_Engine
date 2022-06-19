@@ -3,6 +3,16 @@
 #include <cglm/cglm.h>
 #include "entity.h"
 #include "Application.h"
+#include "global_variables.h"
+
+
+void normalize(vec3 vec, size_t size) {
+	for(int i = 0; i < size; i += 3) {
+		vec[i] /= g_width; //x
+		vec[i+1] /= g_height; //y
+	}
+}
+
 
 void process_entity(entity *to_make, Window_t window) {
 	char const *vertex_shader = 
@@ -61,6 +71,8 @@ void process_entity(entity *to_make, Window_t window) {
 	glDeleteShader(vertShader);
 	glDeleteShader(fragShader);
 
+	normalize(to_make->vertices, to_make->vertices_size);
+
 	glGenVertexArrays(1, &to_make->VAO);
 	glBindVertexArray(to_make->VAO);
 	
@@ -68,19 +80,7 @@ void process_entity(entity *to_make, Window_t window) {
 	glGenBuffers(1, &to_make->EBO);
 
     glBindBuffer(GL_ARRAY_BUFFER, to_make->VBO);
-	
-	for(int i = 0; i < to_make->vertices_size; i += 3) {
-		float tmp[3] = {
-			to_make->vertices[i], to_make->vertices[1+i], to_make->vertices[2+i]
-		};
-		int width;
-		int height;
-		glfwGetWindowSize(, &width, &height);
-
-		to_make->vertices[i] = tmp[0];
-		to_make->vertices[1+i] = tmp[1];
-		to_make->vertices[2+i] = tmp[2];
-	}
+		
 	glBufferData(GL_ARRAY_BUFFER, to_make->vertices_size * sizeof(float), to_make->vertices, render_attention_of_entity);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, to_make->EBO);
@@ -99,9 +99,11 @@ void move(entity *obj, vec3 direction) {
 	glUseProgram(obj->shaderID);
 	glBindVertexArray(obj->VAO);
 	uint32_t position = glGetUniformLocation(obj->shaderID, "pos2");
+	
+	normalize(direction, 3);
 
 	glm_vec3_add(obj->position, direction, obj->position);
-	glm_normalize(obj->position);
+	printf("%f, %f, %f\n", obj->position[0], obj->position[1], obj->position[2]);
 	glUniform3f(position, obj->position[0], obj->position[1], obj->position[2]);
 }
 
