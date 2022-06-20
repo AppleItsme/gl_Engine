@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "Application.h"
 #include "global_variables.h"
-
+#include <string.h>
 
 void normalize(vec3 vec, size_t size) {
 	for(int i = 0; i < size; i += 3) {
@@ -13,28 +13,57 @@ void normalize(vec3 vec, size_t size) {
 	}
 }
 
+int getFileSize(FILE *file) {
+    if(fseek(file, 0L, SEEK_END) != 0) {
+		printf("file size seek couldn't work");
+		return -1;
+	}
+    int size = ftell(file);
+	printf("the file components: %s\n", file->_IO_read_base);
+	fseek(file, 0L, SEEK_SET);
+    return size;
+}
 
-void process_entity(entity *to_make, Window_t window) {
-	char const *vertex_shader = 
-		"#version 460 core\n"
-		"layout (location = 0) in vec3 pos1;\n"
-		"uniform vec3 pos2;\n"
-		"void main() {\n"
-		"	gl_Position = vec4(pos1 + pos2, 1);\n"
-		"}";
-	char const *fragment_shader = 
-		"#version 460 core\n"
-		"out vec4 FragColor;\n"
-		"void main() {\n"
-		"	FragColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);\n"
-		"}";
+void process_entity(entity *to_make, Window_t window, char *vert_path, char *frag_path) {
+
+	FILE *file = fopen(vert_path, "r");
+	if(file == NULL) {
+		perror("Error in opening the file");
+	}
+
+	fseek(file, 0, SEEK_END);
 	
+	size_t fsize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	char *vertex_shader = malloc((fsize+1) * sizeof(char));
+	fread(vertex_shader, sizeof(char), fsize, file);
+	vertex_shader[fsize] = '\0';
+
+	printf("%s", vertex_shader);
+	fclose(file);
+	
+	file = fopen(frag_path, "r");
+	fseek(file, 0, SEEK_END);	
+	
+	fsize = ftell(file);
+	fseek(file, 0, SEEK_SET);
+
+	char *fragment_shader = malloc((fsize+1) * sizeof(char));
+	fread(fragment_shader, sizeof(char), fsize, file);
+	fragment_shader[fsize-1] = '\0';
+	printf("%s", fragment_shader);
+	fclose(file);
+
 	uint32_t vertShader, fragShader;
 	vertShader = glCreateShader(GL_VERTEX_SHADER);
 	fragShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(vertShader, 1, &vertex_shader, NULL);
 	glShaderSource(fragShader, 1, &fragment_shader, NULL);
 	glCompileShader(vertShader);
+	
+	free(vertex_shader);
+	free(fragment_shader);
+
 	int success;
 	char info[512];
 	glGetShaderiv(vertShader, GL_COMPILE_STATUS, &success);
@@ -103,7 +132,6 @@ void move(entity *obj, vec3 direction) {
 	normalize(direction, 3);
 
 	glm_vec3_add(obj->position, direction, obj->position);
-	printf("%f, %f, %f\n", obj->position[0], obj->position[1], obj->position[2]);
 	glUniform3f(position, obj->position[0], obj->position[1], obj->position[2]);
 }
 

@@ -26,7 +26,7 @@ struct_t {
 	uint32_t *indices;
 } entity;
 
-void process_entity(entity *to_make, Window_t window);
+void process_entity(entity *to_make, Window_t window, char *vert_path, char *frag_path);
 void draw_entity(entity *to_draw);
 void destruct_entity(entity *entity_obj);
 void move(entity *obj, vec3 direction);

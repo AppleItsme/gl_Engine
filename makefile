@@ -4,4 +4,4 @@ OUTPUT_NAME = my_opengl
 make:
 	gcc -O3 *.c -o $(OUTPUT_NAME) $(LINKER_FLAGS) 
 debug:
-	gcc -O3 *.c -o $(OUTPUT_NAME) $(LINKER_FLAGS) -g
+	gcc *.c -o $(OUTPUT_NAME) $(LINKER_FLAGS) -g

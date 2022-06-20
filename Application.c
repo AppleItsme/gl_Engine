@@ -61,7 +61,7 @@ void run_Application() {
 		.indices_size = 6,
 		.draw_type = dynamic
 	};
-	process_entity(&rectangle, window);
+	process_entity(&rectangle, window, "./shaders/basic.vert", "./shaders/basic.frag");
 	double time = glfwGetTime();
 
 	while(!glfwWindowShouldClose(window)) {
